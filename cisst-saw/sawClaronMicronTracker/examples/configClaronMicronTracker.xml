@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<tracker>
+
+  <!-- controller properties
+    calibration: directory containing camera calibration file
+    markers: directory containing marker definitions
+  -->
+  <controller calibration="/Users/sungminkim/Project/Programming/Micron/MacOSX/CalibrationFiles/"
+              markers="/Users/sungminkim/Project/Programming/Micron/MacOSX/Markers" />
+
+  <!-- list of tools used -->
+  <tools>
+
+    <!-- tool properties
+      name: used to name the tool component interface
+      marker: marker definition file, relative to "markers" directory
+    -->
+    <tool name="Reference"
+          marker="test1" />
+          
+    <tool name="Tool"
+          marker="test2" />
+          
+  </tools>
+  
+  <xpoints>
+      
+    <xpoint max_number="6" />
+      
+  </xpoints>
+      
+</tracker>
