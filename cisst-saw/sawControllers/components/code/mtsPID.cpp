@@ -20,7 +20,7 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstOSAbstraction/osaSleep.h>
 #include <cisstMultiTask/mtsInterfaceRequired.h>
 #include <cisstMultiTask/mtsInterfaceProvided.h>
-
+#include <cisstOSAbstraction/osaSleep.h>
 #include <sawControllers/mtsPID.h>
 
 CMN_IMPLEMENT_SERVICES_DERIVED_ONEARG(mtsPID, mtsTaskPeriodic, mtsTaskPeriodicConstructorArg);
@@ -32,6 +32,7 @@ mtsPID::mtsPID(const std::string & componentName, const double periodInSeconds):
     CheckJointLimit(true),
     Enabled(false),
     mIsSimulated(false),
+    EnabledIO(true),
     ConfigurationStateTable(100, "Configuration")
 {
     AddStateTable(&ConfigurationStateTable);
@@ -45,6 +46,7 @@ mtsPID::mtsPID(const mtsTaskPeriodicConstructorArg & arg):
     CheckJointLimit(true),
     Enabled(false),
     mIsSimulated(false),
+    EnabledIO(true),
     ConfigurationStateTable(100, "Configuration")
 {
     AddStateTable(&ConfigurationStateTable);
@@ -93,6 +95,7 @@ void mtsPID::SetupInterfaces(void)
     if (interfaceProvided) {
         interfaceProvided->AddCommandVoid(&mtsPID::ResetController, this, "ResetController");
         interfaceProvided->AddCommandWrite(&mtsPID::Enable, this, "Enable", false);
+        interfaceProvided->AddCommandWrite(&mtsPID::EnableIO, this,               "EnableIO", false); //simulink too over
         interfaceProvided->AddCommandWrite(&mtsPID::EnableJoints, this, "EnableJoints", mJointsEnabled);
         interfaceProvided->AddCommandWrite(&mtsPID::EnableTorqueMode, this, "EnableTorqueMode", TorqueMode);
         interfaceProvided->AddCommandWrite(&mtsPID::SetDesiredPosition, this, "SetPositionJoint", DesiredPositionParam);
@@ -510,6 +513,10 @@ void mtsPID::Run(void)
 
         // write torque to robot
         TorqueParam.SetForceTorque(Torque);
+        if(EnabledIO) {
+            Robot.SetTorque(TorqueParam);
+         //CMN_LOG_RUN_WARNING << "RunPID: " << GetName() << std::setprecision(5) << Torque << std::endl;
+         }     
         if (!mIsSimulated) {
             Robot.SetTorque(TorqueParam);
         }
@@ -707,6 +714,7 @@ void mtsPID::Enable(const bool & enable)
     // set torque to 0
     Torque.SetAll(0.0);
     TorqueParam.SetForceTorque(Torque);
+
     if (!mIsSimulated) {
         Robot.SetTorque(TorqueParam);
     }
@@ -720,7 +728,10 @@ void mtsPID::Enable(const bool & enable)
     // trigger Enabled
     Events.Enabled(Enabled);
 }
-
+void mtsPID::EnableIO(const bool & enable)
+{
+EnabledIO = enable;
+}
 void mtsPID::EnableJoints(const vctBoolVec & enable)
 {
     if (enable.size() == mNumberOfJoints) {

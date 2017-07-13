@@ -80,3 +80,6 @@ http://www.cisst.org/cisst/license.txt.
 %include "cisstParameterTypes/prmTransformationFixed.h"
 
 %include "cisstParameterTypes/prmRobotState.h"
+%include "cisstParameterTypes/prmSimulinkDataPacket.h"
+%include "cisstParameterTypes/prmSocketDataPacket.h"
+%include "cisstParameterTypes/prmTwoWaySocket.h"

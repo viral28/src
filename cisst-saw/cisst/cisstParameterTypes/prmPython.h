@@ -53,5 +53,8 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstParameterTypes/prmTransformationDynamic.h>
 
 #include <cisstParameterTypes/prmRobotState.h>
+#include <cisstParameterTypes/prmSimulinkDataPacket.h>
+#include <cisstParameterTypes/prmSocketDataPacket.h>
+#include <cisstParameterTypes/prmTwoWaySocket.h>
 
 #endif // _prmPython_h

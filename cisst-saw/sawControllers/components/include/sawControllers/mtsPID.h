@@ -140,6 +140,8 @@ protected:
     //! Enable mtsPID controller
     bool Enabled;
 
+    //! Enable mtsPID IO (sending torque commands)
+    bool EnabledIO;
     //! Enable individal joints
     vctBoolVec mJointsEnabled;
 
@@ -154,7 +156,7 @@ protected:
     // simulated
     bool mIsSimulated;
 
-    //! Configuration state table
+   //! Configuration state table
     mtsStateTable ConfigurationStateTable;
 
     struct {
@@ -164,7 +166,8 @@ protected:
         mtsFunctionWrite JointLimit;
         //! Enabled joints event
         mtsFunctionWrite EnabledJoints;
-    } Events;
+         //! Enable mtsPID IO (sending torque commands)                             
+     bool EnabledIO;  } Events;
 
     struct {
         mtsFunctionWrite Status;
@@ -191,6 +194,7 @@ protected:
     void Enable(const bool & enable);
 
     void EnableJoints(const vctBoolVec & enable);
+    void EnableIO(const bool & enable);
 
     void EnableTorqueMode(const vctBoolVec & enable);
 
@@ -210,7 +214,7 @@ public:
            const double period);
     mtsPID(const mtsTaskPeriodicConstructorArg & arg);
     ~mtsPID(){}
-
+       
     /**
      * @brief Configure PID gains & params
      *

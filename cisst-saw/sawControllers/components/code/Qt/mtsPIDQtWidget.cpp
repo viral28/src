@@ -32,6 +32,7 @@ http://www.cisst.org/cisst/license.txt.
 
 // cisst
 #include <cisstMultiTask/mtsInterfaceRequired.h>
+#include <cisstMultiTask/mtsInterfaceProvided.h>
 #include <cisstParameterTypes/prmJointType.h>
 #include <cisstCommon/cmnConstants.h>
 #include <cisstCommon/cmnUnits.h>
@@ -41,12 +42,13 @@ http://www.cisst.org/cisst/license.txt.
 CMN_IMPLEMENT_SERVICES_DERIVED_ONEARG(mtsPIDQtWidget, mtsComponent, mtsComponentConstructorNameAndUInt)
 
 mtsPIDQtWidget::mtsPIDQtWidget(const std::string & componentName,
-                               unsigned int numberOfAxis,
-                               double periodInSeconds):
+                              unsigned int numberOfAxis,
+                               double periodInSeconds, const bool usingSimulinkControl):
     mtsComponent(componentName),
     TimerPeriodInMilliseconds(periodInSeconds * 1000), // Qt timer are in milliseconds
     NumberOfAxis(numberOfAxis)
 {
+    usingSimulink = usingSimulinkControl;
     Init();
 }
 
@@ -80,6 +82,7 @@ void mtsPIDQtWidget::Init(void)
     if (interfaceRequired) {
         interfaceRequired->AddFunction("ResetController", PID.ResetController);
         interfaceRequired->AddFunction("Enable", PID.Enable);
+        interfaceRequired->AddFunction("EnableIO",PID.EnableIO); 
         interfaceRequired->AddFunction("EnableTorqueMode", PID.EnableTorqueMode);
         interfaceRequired->AddFunction("SetPositionJoint", PID.SetPositionJoint);
         interfaceRequired->AddFunction("GetStateJoint", PID.GetStateJoint);
@@ -159,7 +162,7 @@ void mtsPIDQtWidget::closeEvent(QCloseEvent * event)
 
 void mtsPIDQtWidget::SlotEnablePID(bool toggle)
 {
-    PID.Enable(toggle);
+    EnablePID(true, toggle);
 }
 
 void mtsPIDQtWidget::SlotEnableTorqueMode(bool toggle)
@@ -256,6 +259,8 @@ void mtsPIDQtWidget::SlotEnableDirectControl(bool toggle)
     QPBMaintainPosition->setEnabled(toggle);
     QPBZeroPosition->setEnabled(toggle);
     QPBResetPIDGain->setEnabled(toggle);
+    if(usingSimulink)
+        SimulinkQtWidget.EnableWidget(toggle);
 }
 
 void mtsPIDQtWidget::timerEvent(QTimerEvent * CMN_UNUSED(event))
@@ -498,3 +503,49 @@ void mtsPIDQtWidget::EnableEventHandler(const bool & enable)
 {
     emit SignalEnablePID(enable);
 }
+bool mtsPIDQtWidget::isSimulinkEnabled()
+{
+    if(usingSimulink)
+    {
+        bool simEnabled = false;
+        mtsExecutionResult executionResult = SimulinkQtWidget.IsEnabled(simEnabled);
+        if (!executionResult.IsOK()) {
+            CMN_LOG_CLASS_RUN_WARNING << "ExecuteTrajectory: Call to SimulinkQtWidget.IsEnabled(simEnabled) failed \""
+                                      << executionResult << "\"" << std::endl;
+        }
+        return simEnabled;
+    }
+
+    return false;
+}
+
+void mtsPIDQtWidget::EnablePIDFromSimulinkQt(const mtsBool &enable)
+{
+    EnablePID(false, enable);
+}
+
+
+void mtsPIDQtWidget::EnablePID(bool localButtonUsed, bool enable)
+{
+    if(usingSimulink && enable) {
+        SimulinkQtWidget.Enable(!enable);  //turn off Simulink if PID is going on!!
+        PID.EnableIO(enable); //make sure to re-enable IO, disabling can only happen if Simulink used
+    }
+
+    if(localButtonUsed) {
+        PID.Enable(enable);
+        CMN_LOG_RUN_WARNING << "PID controller being turned " << (enable ? "ON" : "OFF") << std::endl;
+    } else {
+        PID.EnableIO(enable);
+        CMN_LOG_RUN_WARNING << "PID IO being turned " << (enable ? "ON" : "OFF") << std::endl;
+        QCBEnablePID->setChecked(enable);
+    }
+
+    //update GUI
+    QVWDesiredPositionWidget->setEnabled(enable);
+    QVWPGainWidget->setEnabled(enable);
+    QVWIGainWidget->setEnabled(enable);
+    QVWDGainWidget->setEnabled(enable);
+    QVWDesiredEffortWidget->setEnabled(enable);
+    QVRCurrentEffortWidget->setEnabled(enable);
+}                           

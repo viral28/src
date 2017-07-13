@@ -40,7 +40,7 @@ class CISST_EXPORT mtsPIDQtWidget: public QWidget, public mtsComponent
 
 public:
     mtsPIDQtWidget(const std::string & componentName, unsigned int numberOfAxis,
-                   double periodInSeconds = 50.0 * cmn_ms);
+                   double periodInSeconds = 50.0 * cmn_ms, const bool usingSimulinkControl = false);
     mtsPIDQtWidget(const mtsComponentConstructorNameAndUInt &arg);
     ~mtsPIDQtWidget(){}
 
@@ -93,6 +93,7 @@ protected:
     struct ControllerPIDStruct {
         mtsFunctionVoid  ResetController;
         mtsFunctionWrite Enable;
+        mtsFunctionWrite EnableIO;
         mtsFunctionWrite EnableTorqueMode;
         mtsFunctionWrite SetPositionJoint;
         mtsFunctionRead  GetStateJoint;
@@ -111,8 +112,20 @@ protected:
         mtsFunctionWrite SetIGain;
     } PID;
 
+    struct SimulinkQtWidgetStruct {
+        mtsFunctionWrite EnableWidget;
+        mtsFunctionWrite Enable;
+        mtsFunctionWrite EnableLogs;
+        mtsFunctionRead  IsEnabled;
+    } SimulinkQtWidget;
 private:
     bool DirectControl;
+ bool isSimulinkEnabled();                                                  
+     void EnablePIDFromSimulinkQt(const mtsBool & enable);                      
+                                                                                 
+     void EnablePID(bool localButtonUsed, bool enable);                         
+                                                                                 
+     bool usingSimulink;
 
     //! SetPosition
     vctDoubleVec DesiredPosition;
