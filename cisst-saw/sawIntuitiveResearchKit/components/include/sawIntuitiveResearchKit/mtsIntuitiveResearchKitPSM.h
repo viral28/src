@@ -32,7 +32,7 @@ class CISST_EXPORT mtsIntuitiveResearchKitPSM: public mtsIntuitiveResearchKitArm
     CMN_DECLARE_SERVICES(CMN_DYNAMIC_CREATION_ONEARG, CMN_LOG_ALLOW_DEFAULT);
 
 public:
-    mtsIntuitiveResearchKitPSM(const std::string & componentName, const double periodInSeconds);
+    mtsIntuitiveResearchKitPSM(const std::string & componentName, const double periodInSeconds, const bool usingSimulinkControl);
     mtsIntuitiveResearchKitPSM(const mtsTaskPeriodicConstructorArg & arg);
     inline ~mtsIntuitiveResearchKitPSM() {}
 

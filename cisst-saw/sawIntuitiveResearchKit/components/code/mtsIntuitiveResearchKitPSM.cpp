@@ -29,8 +29,8 @@ http://www.cisst.org/cisst/license.txt.
 
 CMN_IMPLEMENT_SERVICES_DERIVED_ONEARG(mtsIntuitiveResearchKitPSM, mtsTaskPeriodic, mtsTaskPeriodicConstructorArg);
 
-mtsIntuitiveResearchKitPSM::mtsIntuitiveResearchKitPSM(const std::string & componentName, const double periodInSeconds):
-    mtsIntuitiveResearchKitArm(componentName, periodInSeconds)
+mtsIntuitiveResearchKitPSM::mtsIntuitiveResearchKitPSM(const std::string & componentName, const double periodInSeconds, const bool usingSimulink):
+    mtsIntuitiveResearchKitArm(componentName, periodInSeconds, usingSimulink)
 {
     Init();
 }

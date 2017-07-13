@@ -44,7 +44,7 @@ class CISST_EXPORT mtsIntuitiveResearchKitArm: public mtsTaskPeriodic
     CMN_DECLARE_SERVICES(CMN_NO_DYNAMIC_CREATION, CMN_LOG_ALLOW_DEFAULT);
 
 public:
-    mtsIntuitiveResearchKitArm(const std::string & componentName, const double periodInSeconds);
+    mtsIntuitiveResearchKitArm(const std::string & componentName, const double periodInSeconds, bool usingSimulinkControl = false);
     mtsIntuitiveResearchKitArm(const mtsTaskPeriodicConstructorArg & arg);
     virtual inline ~mtsIntuitiveResearchKitArm() {}
 
@@ -115,7 +115,10 @@ protected:
     virtual void SetPositionGoalJoint(const prmPositionJointSet & newPosition);
     virtual void SetPositionCartesian(const prmPositionCartesianSet & newPosition);
     virtual void SetPositionGoalCartesian(const prmPositionCartesianSet & newPosition);
-    virtual void SetWrenchSpatial(const prmForceCartesianSet & newForce);
+    virtual void GetRobotCartVelFromJacobian(vctDoubleVec & slaveVelAndPos) const;
+    virtual void GetJointTorqueFromForceTorque(vctDoubleVec & torqueValues) const;
+ 
+     virtual void SetWrenchSpatial(const prmForceCartesianSet & newForce);
     virtual void SetWrenchBody(const prmForceCartesianSet & newForce);
     /*! Apply the wrench relative to the body or to reference frame (i.e. absolute). */
     virtual void SetWrenchBodyOrientationAbsolute(const bool & absolute);
@@ -169,6 +172,17 @@ protected:
         mtsFunctionWrite SetTrackingErrorTolerance;
     } PID;
 
+    //Interface to Simulink component
+    struct {
+        mtsFunctionWrite SignalTrajectoryRunning;
+        mtsFunctionWrite SetDesiredJointPosition;
+        mtsFunctionWrite SetDesiredCartesianPosition;
+        mtsFunctionRead  GetControllerTypeIsJoint;
+
+        mtsBool          UsingJointControl;
+    } SimulinkController;
+
+ 
     // Interface to IO component
     mtsInterfaceRequired * IOInterface;
     struct InterfaceRobotTorque {
@@ -286,6 +300,8 @@ protected:
     bool HomingBiasEncoderRequested;
     bool HomingPowerRequested;
     bool HomingCalibrateArmStarted;
+    bool usingSimulink;
+
 
     unsigned int mCounter;
 

@@ -28,7 +28,7 @@ http://www.cisst.org/cisst/license.txt.
 #include <sawRobotIO1394/mtsRobotIO1394.h>
 
 #include <sawControllers/mtsPID.h>
-
+#include <sawControllers/mtsSimulinkController.h>
 #include <sawIntuitiveResearchKit/sawIntuitiveResearchKitRevision.h>
 #include <sawIntuitiveResearchKit/sawIntuitiveResearchKitConfig.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitMTM.h>
@@ -79,22 +79,40 @@ void mtsIntuitiveResearchKitConsole::Arm::ConfigurePID(const std::string & confi
         }
     }
 }
+void mtsIntuitiveResearchKitConsole::Arm::ConfigureSimulinkController(const unsigned int numJoints, const double &periodInSeconds)
+{
+     mSimulinkControllerComponentName = mName + "-SimulinkControl";             
+                                                                                
+     mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();       
+     mtsSimulinkController * simulinkControllerMaster = new mtsSimulinkController(mSimulinkControllerComponentName,
+                                     (periodInSeconds != 0.0) ? periodInSeconds : 1.0 * cmn_ms, numJoints );
+    // simulinkControllerMaster->Configure(mPIDConfigurationFile);                
+     //componentManager->AddComponent(simulinkControllerMaster);                  
+     componentManager->Connect(SimulinkControllerComponentName(), "RobotJointTorqueInterface", IOComponentName(), Name());
+                                                                                
+     if (periodInSeconds == 0.0) {                                              
+         componentManager->Connect(SimulinkControllerComponentName(), "ExecIn", 
+                                   IOComponentName(), "ExecOut");               
+     }                                                                          
+ } 
 
-void mtsIntuitiveResearchKitConsole::Arm::ConfigureArm(const ArmType armType,
+ void mtsIntuitiveResearchKitConsole::Arm::ConfigureArm(const ArmType armType,
                                                        const std::string & configFile,
                                                        const double & periodInSeconds,
-                                                       mtsComponent * existingArm)
+                                                       const bool usingSimulinkControl, 
+                                                      mtsComponent * existingArm)
 {
     mType = armType;
     mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
     mArmConfigurationFile = configFile;
+    mUsingSimulink = usingSimulinkControl;
     // for research kit arms, create, add to manager and connect to
     // extra IO, PID, etc.  For generic arms, do nothing.
     switch (armType) {
     case ARM_MTM:
         {
             if (!existingArm) {
-                mtsIntuitiveResearchKitMTM * master = new mtsIntuitiveResearchKitMTM(Name(), periodInSeconds);
+                mtsIntuitiveResearchKitMTM * master = new mtsIntuitiveResearchKitMTM(Name(), periodInSeconds, UsingSimulink());
                 if (mSimulation == SIMULATION_KINEMATIC) {
                     master->SetSimulated();
                 }
@@ -106,7 +124,7 @@ void mtsIntuitiveResearchKitConsole::Arm::ConfigureArm(const ArmType armType,
     case ARM_PSM:
         {
             if (!existingArm) {
-                mtsIntuitiveResearchKitPSM * slave = new mtsIntuitiveResearchKitPSM(Name(), periodInSeconds);
+                mtsIntuitiveResearchKitPSM * slave = new mtsIntuitiveResearchKitPSM(Name(), periodInSeconds, UsingSimulink());
                 if (mSimulation == SIMULATION_KINEMATIC) {
                     slave->SetSimulated();
                 }
@@ -285,6 +303,13 @@ bool mtsIntuitiveResearchKitConsole::Arm::Connect(void)
         if ((mBaseFrameComponentName != "") && (mBaseFrameInterfaceName != "")) {
             componentManager->Connect(Name(), "BaseFrame", mBaseFrameComponentName, mBaseFrameInterfaceName);
         }
+        if(UsingSimulink()) {
+             componentManager->Connect(Name(), "SimulinkControlCommand",
+                                   SimulinkControllerComponentName(), "SimulinkController");
+             componentManager->Connect(SimulinkControllerComponentName(), "RobotPSM",
+                                  Name(), "Robot");
+
+        }
     }
     return true;
 }
@@ -292,6 +317,10 @@ bool mtsIntuitiveResearchKitConsole::Arm::Connect(void)
 const std::string & mtsIntuitiveResearchKitConsole::Arm::Name(void) const {
     return mName;
 }
+const bool & mtsIntuitiveResearchKitConsole::Arm::UsingSimulink(void) const {
+    return mUsingSimulink;
+}
+
 
 const std::string & mtsIntuitiveResearchKitConsole::Arm::IOComponentName(void) const {
     return mIOComponentName;
@@ -300,6 +329,11 @@ const std::string & mtsIntuitiveResearchKitConsole::Arm::IOComponentName(void) c
 const std::string & mtsIntuitiveResearchKitConsole::Arm::PIDComponentName(void) const {
     return mPIDComponentName;
 }
+
+const std::string & mtsIntuitiveResearchKitConsole::Arm::SimulinkControllerComponentName(void) const {
+    return mSimulinkControllerComponentName;
+}
+
 
 
 mtsIntuitiveResearchKitConsole::TeleopECM::TeleopECM(const std::string & name,

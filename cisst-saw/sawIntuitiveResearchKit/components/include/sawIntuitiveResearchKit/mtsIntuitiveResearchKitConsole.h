@@ -62,11 +62,11 @@ public:
           IO using the ExecIn/ExecOut interfaces. */
         void ConfigurePID(const std::string & configFile,
                           const double & periodInSeconds = 0.0 * cmn_ms);
-
-        /*! Create and configure the robot arm. */
+        void ConfigureSimulinkController(const unsigned int numJoints, const double & periodInSeconds = 0.0*cmn_ms );        /*! Create and configure the robot arm. */
         void ConfigureArm(const ArmType armType,
                           const std::string & configFile,
                           const double & periodInSeconds = 0.5 * cmn_ms,
+                          const bool usingSimulinkControl = false,
                           mtsComponent * existingArm = 0);
 
         /*! Connect all interfaces specific to this arm. */
@@ -74,11 +74,14 @@ public:
 
         /*! Accessors */
         const std::string & Name(void) const;
+        const bool & UsingSimulink(void) const;
         const std::string & IOComponentName(void) const;
         const std::string & PIDComponentName(void) const;
+        const std::string & SimulinkControllerComponentName(void) const;
 
     protected:
         std::string mName;
+        bool mUsingSimulink;
         ArmType mType;
         SimulationType mSimulation;
 
@@ -88,6 +91,8 @@ public:
         // PID
         std::string mPIDComponentName;
         std::string mPIDConfigurationFile;
+        //Simulink Controller
+        std::string mSimulinkControllerComponentName;
         // arm
         std::string mArmConfigurationFile;
         double mArmPeriod;

@@ -32,7 +32,7 @@ public:
         MTM_NULL, MTM_LEFT, MTM_RIGHT
     };
 
-    mtsIntuitiveResearchKitMTM(const std::string & componentName, const double periodInSeconds);
+    mtsIntuitiveResearchKitMTM(const std::string & componentName, const double periodInSeconds, const bool usingSimulink);
     mtsIntuitiveResearchKitMTM(const mtsTaskPeriodicConstructorArg & arg);
     inline ~mtsIntuitiveResearchKitMTM() {}
 

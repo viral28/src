@@ -30,9 +30,10 @@ http://www.cisst.org/cisst/license.txt.
 
 CMN_IMPLEMENT_SERVICES_DERIVED_ONEARG(mtsIntuitiveResearchKitArm, mtsTaskPeriodic, mtsTaskPeriodicConstructorArg);
 
-mtsIntuitiveResearchKitArm::mtsIntuitiveResearchKitArm(const std::string & componentName, const double periodInSeconds):
+mtsIntuitiveResearchKitArm::mtsIntuitiveResearchKitArm(const std::string & componentName, const double periodInSeconds, const bool usingSimulinkControl):
     mtsTaskPeriodic(componentName, periodInSeconds)
 {
+    usingSimulink = usingSimulinkControl;
 }
 
 mtsIntuitiveResearchKitArm::mtsIntuitiveResearchKitArm(const mtsTaskPeriodicConstructorArg & arg):
@@ -138,6 +139,17 @@ void mtsIntuitiveResearchKitArm::Init(void)
         PIDInterface->AddEventHandlerWrite(&mtsIntuitiveResearchKitArm::ErrorEventHandler, this, "Error");
     }
 
+    if(usingSimulink) {
+        mtsInterfaceRequired * simulinkInterfaceRequired = AddInterfaceRequired("SimulinkControlCommand");
+        if (simulinkInterfaceRequired) {
+            simulinkInterfaceRequired->AddFunction("SignalTrajEvent",            SimulinkController.SignalTrajectoryRunning);
+            simulinkInterfaceRequired->AddFunction("SetPositionJoint",           SimulinkController.SetDesiredJointPosition);
+            simulinkInterfaceRequired->AddFunction("SetPositionCartDes",         SimulinkController.SetDesiredCartesianPosition);
+            simulinkInterfaceRequired->AddFunction("GetSimControllerType",       SimulinkController.GetControllerTypeIsJoint);
+         }
+    }
+
+
     // Robot IO
     IOInterface = AddInterfaceRequired("RobotIO");
     if (IOInterface) {
@@ -172,6 +184,8 @@ void mtsIntuitiveResearchKitArm::Init(void)
     if (RobotInterface) {
         // Get
         RobotInterface->AddCommandReadState(this->StateTable, JointGetParam, "GetPositionJoint");
+        RobotInterface->AddCommandRead(&mtsIntuitiveResearchKitArm::GetRobotCartVelFromJacobian, this, "GetRobotCartVelFromJacobian");
+        RobotInterface->AddCommandRead(&mtsIntuitiveResearchKitArm::GetJointTorqueFromForceTorque,this, "GetJointTorqueFromForceTorque");
         RobotInterface->AddCommandReadState(this->StateTable, JointGetDesired, "GetPositionJointDesired");
         RobotInterface->AddCommandReadState(this->StateTable, StateJointParam, "GetStateJoint");
         RobotInterface->AddCommandReadState(this->StateTable, StateJointDesiredParam, "GetStateJointDesired");
@@ -714,7 +728,22 @@ void mtsIntuitiveResearchKitArm::SetPositionJointLocal(const vctDoubleVec & newP
 {
     JointSetParam.Goal().Zeros();
     JointSetParam.Goal().Assign(newPosition, NumberOfJoints());
-    PID.SetPositionJoint(JointSetParam);
+
+    mtsExecutionResult executionResult;
+    executionResult = PID.SetPositionJoint(JointSetParam);
+    if (!executionResult.IsOK()) {
+        CMN_LOG_CLASS_RUN_WARNING << GetName() << ": Call to PID.SetJointPosition failed \""
+                                  << executionResult << "\"" << std::endl;
+    }
+
+    if(usingSimulink) {
+        SimulinkController.GetControllerTypeIsJoint(SimulinkController.UsingJointControl);
+        if(SimulinkController.UsingJointControl) {
+            SimulinkController.SetDesiredJointPosition(JointSetParam);
+        } else { //using Cartesian Control
+            SimulinkController.SetDesiredCartesianPosition(CartesianSetParam);
+        }
+    }
 }
 
 void mtsIntuitiveResearchKitArm::Freeze(void)
@@ -823,6 +852,173 @@ void mtsIntuitiveResearchKitArm::SetBaseFrame(const prmPositionCartesianSet & ne
         this->BaseFrameValid = false;
     }
 }
+
+/*original was supposed to just return Jacobian, but couldn't pass double** through the provided interface,
+so instead the calculation of the cartesian space velocity will be done here. Joint space velocity will be
+passed in, this will use the available Jacobian and return the cartesian space velocity in the same vector*/
+void mtsIntuitiveResearchKitArm::GetRobotCartVelFromJacobian( vctDoubleVec & slaveVelAndPos ) const
+{
+    //From Chapter 4 of "A mathematical introduction to robotic manipulation" by Murray
+
+    vctDoubleVec jointVel, pos_t0, cartVel;
+    jointVel.SetSize(NumberOfJoints()); //rad and m
+    pos_t0.SetSize(3);
+    cartVel.SetSize(6);
+
+    for (unsigned int i=0; i < slaveVelAndPos.size(); i++)
+    {
+        if(i < jointVel.size())
+            jointVel.at(i) = slaveVelAndPos.at(i);
+        else
+            pos_t0.at(i - jointVel.size()) = slaveVelAndPos.at(i);
+    }
+
+    //From Zhan-Fan Quek, Stanford
+    vctDoubleFrm3 cartesianPosRotCurrent;
+    vctFrame4x4<double> t_FKResults;
+    vctDoubleRot3 t_FKResultsRotation;
+
+    t_FKResults = Manipulator.ForwardKinematics(JointGet);
+    Manipulator.JacobianSpatial(JointGet);
+
+    // Update the rotation matrix of the robot end effector
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 3; j++)
+            t_FKResultsRotation[i][j] = (t_FKResults.Rotation())[i][j];
+    }
+
+    cartesianPosRotCurrent.From(t_FKResults);
+
+    double** robotJacobian = Manipulator.Js; //spatial Jacobian
+    vctDynamicMatrix<double> manipulatorJacobian;
+    manipulatorJacobian.SetSize(6,NumberOfJoints());
+
+    // Determine the manipulator jacobian
+    for (int j = 0; j < 6; j++)
+    {
+        //NOTE the robotJacobian is the spatial Jacobian; columns are NOT associated with Joints
+        //The first three rows are linear velocities; so it's the spatial Jacobian linear velocity plus the cross product of the position and the angular velocities (v = theta_dot x p)
+        //And the last three rows are angular velocities. So your final manipulator Jacobian contains information about the linear and angular velocities of the end effector WITH RESPECT
+        //TO the base frame. Or, http://summerschool2009.robotik-bs.de/downloads/lecture_notes/summerschool09_mmr_part09.pdf
+        manipulatorJacobian[0][j] = robotJacobian[j][0] + robotJacobian[j][4] * cartesianPosRotCurrent.Translation()(2) - robotJacobian[j][5] * cartesianPosRotCurrent.Translation()(1);
+        manipulatorJacobian[1][j] = robotJacobian[j][1] + robotJacobian[j][5] * cartesianPosRotCurrent.Translation()(0) - robotJacobian[j][3] * cartesianPosRotCurrent.Translation()(2);
+        manipulatorJacobian[2][j] = robotJacobian[j][2] + robotJacobian[j][3] * cartesianPosRotCurrent.Translation()(1) - robotJacobian[j][4] * cartesianPosRotCurrent.Translation()(0);
+        manipulatorJacobian[3][j] = robotJacobian[j][3];
+        manipulatorJacobian[4][j] = robotJacobian[j][4];
+        manipulatorJacobian[5][j] = robotJacobian[j][5];
+    }
+
+    // Calculate the end effector velocities
+    for (unsigned int i = 0; i < 6; i++)
+    {
+        cartVel.at(i) = 0;
+
+        for (unsigned int j = 0; j < NumberOfJoints()-1; j++)
+            cartVel(i)  = cartVel(i)  + manipulatorJacobian(i,j)  * jointVel(j);
+    }
+
+    //put calculated cartesian velocity in return vector
+    for (unsigned int i = 0; i < slaveVelAndPos.size(); i++)
+        slaveVelAndPos.at(i) = (i < cartVel.size()) ? cartVel.at(i) : 0;
+}
+
+/*Similar to GetRobotCartVelFromJacobian, original was supposed to just return Jacobian, but couldn't pass
+double** through the provided interface, so instead the calculation of the joint torques from force torque
+will be done here. ForceTorque (size = 6) will be passed in size 7 (NumberOfJoints) vector torqeValues and
+return joint torques in the same vector. Note, grip force is ASSUMED ZERO */
+void mtsIntuitiveResearchKitArm::GetJointTorqueFromForceTorque(vctDoubleVec &torqueValues) const
+{
+    vctDoubleVec cartesianPIDCalculatedForceTorque, cartesianForceJointTorque, cartesianTorqueJointTorque, cartesianJointTorque;
+    cartesianPIDCalculatedForceTorque.SetSize(6);
+    cartesianPIDCalculatedForceTorque.SetAll(0.0);
+    cartesianForceJointTorque.SetSize(NumberOfJoints());
+    cartesianForceJointTorque.SetAll(0.0);
+    cartesianTorqueJointTorque.SetSize(NumberOfJoints());
+    cartesianTorqueJointTorque.SetAll(0.0);
+    cartesianJointTorque.SetSize(NumberOfJoints()-1);
+    cartesianJointTorque.SetAll(0.0);
+
+    vct6 forcePID, torquePID;
+    forcePID.SetAll(0.0);
+    torquePID.SetAll(0.0);
+
+    //Populate force/torque vector calculated by cartesian controller
+    for (unsigned int i=0; i < cartesianPIDCalculatedForceTorque.size(); i++)
+        cartesianPIDCalculatedForceTorque.at(i) = torqueValues.at(i);
+
+    //From Zhan-Fan Quek, Stanford
+    vctDoubleFrm3 cartesianPosRotCurrent;
+    vctFrame4x4<double> t_FKResults;
+    vctDoubleRot3 t_FKResultsRotation;
+
+    t_FKResults = Manipulator.ForwardKinematics(JointGet);
+    Manipulator.JacobianSpatial(JointGet);
+
+    // Update the rotation matrix of the robot end effector
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 3; j++)
+            t_FKResultsRotation[i][j] = (t_FKResults.Rotation())[i][j];
+    }
+
+    cartesianPosRotCurrent.From(t_FKResults);
+
+    double** robotJacobian = Manipulator.Js; //spatial Jacobian
+    vctDynamicMatrix<double> manipulatorJacobian;
+    manipulatorJacobian.SetSize(6,NumberOfJoints());
+
+    // Determine the manipulator jacobian
+    for (int j = 0; j < 6; j++)
+    {
+        //NOTE the robotJacobian is the spatial Jacobian; columns are NOT associated with Joints
+        //The first three rows are linear velocities; so it's the spatial Jacobian linear velocity plus the cross product of the position and the angular velocities (v = theta_dot x p)
+        //And the last three rows are angular velocities. So your final manipulator Jacobian contains information about the linear and angular velocities of the end effector WITH RESPECT
+        //TO the base frame. Or, http://summerschool2009.robotik-bs.de/downloads/lecture_notes/summerschool09_mmr_part09.pdf
+        manipulatorJacobian[0][j] = robotJacobian[j][0] + robotJacobian[j][4] * cartesianPosRotCurrent.Translation()(2) - robotJacobian[j][5] * cartesianPosRotCurrent.Translation()(1);
+        manipulatorJacobian[1][j] = robotJacobian[j][1] + robotJacobian[j][5] * cartesianPosRotCurrent.Translation()(0) - robotJacobian[j][3] * cartesianPosRotCurrent.Translation()(2);
+        manipulatorJacobian[2][j] = robotJacobian[j][2] + robotJacobian[j][3] * cartesianPosRotCurrent.Translation()(1) - robotJacobian[j][4] * cartesianPosRotCurrent.Translation()(0);
+        manipulatorJacobian[3][j] = robotJacobian[j][3];
+        manipulatorJacobian[4][j] = robotJacobian[j][4];
+        manipulatorJacobian[5][j] = robotJacobian[j][5];
+    }
+
+    //assume UpdateManipulatorJacobian has been run recently
+    // Calculate the respective joint torques from the commanded cartesian force/torque using the jacobian transform
+    vctDynamicMatrix<double> manipulatorJacobianTranspose;
+    manipulatorJacobianTranspose.SetSize(NumberOfJoints(), 6);
+    manipulatorJacobianTranspose = manipulatorJacobian.Transpose();
+
+    for (unsigned int i=0; i<cartesianPIDCalculatedForceTorque.size(); i++) {
+        if(i < 3)
+            forcePID(i)  = cartesianPIDCalculatedForceTorque(i);
+        else
+            torquePID(i) = cartesianPIDCalculatedForceTorque(i);
+    }
+
+    for (unsigned int i=0; i < NumberOfJoints()-1; i++) {
+        for (unsigned int j=0; j < 6; j++) {
+            cartesianForceJointTorque[i] = cartesianForceJointTorque[i] + manipulatorJacobianTranspose[i][j] * forcePID(j);
+        }
+    }
+
+    for (unsigned int i=0; i < NumberOfJoints(); i++) {
+        for (unsigned int j=0; j < 6; j++) {
+            cartesianTorqueJointTorque[i] = cartesianTorqueJointTorque[i] + manipulatorJacobianTranspose[i][j] * torquePID(j);
+        }
+    }
+
+    for (unsigned int i=0; i < cartesianJointTorque.size(); i++) {
+        if(i < 3)
+            cartesianJointTorque(i) = cartesianForceJointTorque(i);
+        else
+            cartesianJointTorque(i) = cartesianTorqueJointTorque(i);
+    }
+
+    for (unsigned int i=0; i < cartesianJointTorque.size(); i++)
+        torqueValues.at(i) = cartesianJointTorque.at(i);
+}
+
 
 void mtsIntuitiveResearchKitArm::ErrorEventHandler(const std::string & message)
 {
