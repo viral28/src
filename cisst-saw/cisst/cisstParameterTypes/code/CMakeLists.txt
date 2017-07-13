@@ -49,6 +49,9 @@ set (SOURCE_FILES
 
      prmActuatorState.cpp
      prmRobotState.cpp
+     prmSimulinkDataPacket.cpp
+     prmSocketDataPacket.cpp
+     prmTwoWaySocket.cpp
      prmActuatorParameters.cpp
 
      prmClassServices.cpp
@@ -81,6 +84,9 @@ set (HEADER_FILES
      prmMaskedVector.h
      prmActuatorState.h
      prmRobotState.h
+     prmSimulinkDataPacket.h
+     prmSocketDataPacket.h
+     prmTwoWaySocket.h
      prmActuatorParameters.h
      prmGainParameters.h
      )

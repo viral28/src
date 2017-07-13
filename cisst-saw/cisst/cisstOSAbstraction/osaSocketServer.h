@@ -60,6 +60,10 @@ class CISST_EXPORT osaSocketServer: public cmnGenericObject
     /*! \brief Destructor */
     ~osaSocketServer(void);
 
+    /*! \return Socket file descriptor */
+    int GetIdentifier(void) const {
+        return ServerSocketFD;
+    };
     /*! \brief Set the port for receiving data
         \param port The port number
         \return true on success */
