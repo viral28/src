@@ -69,7 +69,8 @@ if (cisst_FOUND)
        ${sawControllers_HEADER_DIR}/mtsGravityCompensation.h
        ${sawControllers_HEADER_DIR}/mtsPDGC.h
        ${sawControllers_HEADER_DIR}/mtsPID.h
-       ${sawControllers_HEADER_DIR}/mtsTeleOperation.h)
+       ${sawControllers_HEADER_DIR}/mtsTeleOperation.h
+       ${sawControllers_HEADER_DIR}/mtsSimulinkController.h)
 
   set (SOURCE_FILES
        code/osaGravityCompensation.cpp
@@ -80,7 +81,8 @@ if (cisst_FOUND)
        code/mtsGravityCompensation.cpp
        code/mtsPDGC.cpp
        code/mtsPID.cpp
-       code/mtsTeleOperation.cpp)
+       code/mtsTeleOperation.cpp
+       code/mtsSimulinkController.cpp)
 
   add_library (sawControllers ${HEADER_FILES} ${SOURCE_FILES})
   cisst_target_link_libraries (sawControllers ${REQUIRED_CISST_LIBRARIES})
