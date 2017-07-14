@@ -57,6 +57,12 @@ if (cisst_FOUND)
   configure_file ("${sawControllers_SOURCE_DIR}/code/sawControllersRevision.h.in"
                   "${sawControllers_BINARY_DIR}/include/sawControllers/sawControllersRevision.h")
 
+  # create data type using the data generator
+  cisst_data_generator (sawControllers
+                        "${CISST_BINARY_DIR}/include" # where to save the file
+                        "sawControllers/"    # sub directory for include
+                        code/mtsIntuitiveResearchKitArmTypes.cdg)
+
   include_directories (${sawControllers_INCLUDE_DIR})
   set (sawControllers_HEADER_DIR "${sawControllers_SOURCE_DIR}/include/sawControllers")
 

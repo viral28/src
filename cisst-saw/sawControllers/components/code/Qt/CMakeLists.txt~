@@ -32,12 +32,14 @@ if (cisst_FOUND_AS_REQUIRED)
   include (${CISST_USE_FILE})
 
   # for Qt generated header files
-  include_directories (${CMAKE_CURRENT_BINARY_DIR})
+  include_directories (${CMAKE_CURRENT_BINARY_DIR}
+  		       ${sawIntuitiveResearchKit_INCLUDE_DIR})
   if (CISST_HAS_QT4)
     qt4_wrap_cpp (SAW_CONTROLLERS_QT_WRAP_CPP
                   ${sawControllers_HEADER_DIR}/mtsPIDQtWidget.h
                   ${sawControllers_HEADER_DIR}/mtsTeleOperationQtWidget.h
-                  ${sawControllers_HEADER_DIR}/mtsSimulinkControllerQtWidget.h)
+                  ${sawControllers_HEADER_DIR}/mtsSimulinkControllerQtWidget.h
+                  ${sawIntuitiveResearchKit_HEADER_DIR}/mtsIntuitiveResearchKitArm.h)
   else (CISST_HAS_QT4)
     set (CMAKE_AUTOMOC ON)
   endif (CISST_HAS_QT4)

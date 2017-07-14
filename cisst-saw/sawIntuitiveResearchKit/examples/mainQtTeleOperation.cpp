@@ -30,6 +30,7 @@ http://www.cisst.org/cisst/license.txt.
 #include <sawRobotIO1394/mtsRobotIO1394QtWidgetFactory.h>
 #include <sawControllers/mtsPIDQtWidget.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsole.h>
+#include <sawControllers/mtsSimulinkControllerQtWidget.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsoleQtWidget.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitArmQtWidget.h>
 #include <sawControllers/mtsTeleOperation.h>
@@ -140,19 +141,27 @@ int main(int argc, char ** argv)
     io->Configure(configFiles["io-slave"]);
     componentManager->AddComponent(io);
 
+    bool usingSimulink = true;
     mtsIntuitiveResearchKitConsole::Arm * mtm
             = new mtsIntuitiveResearchKitConsole::Arm(masterName, io->GetName());
     mtm->ConfigurePID(configFiles["pid-master"]);
+    if(usingSimulink) {
+           mtm->ConfigureSimulinkController(7);
+    }
     mtm->ConfigureArm(mtsIntuitiveResearchKitConsole::Arm::ARM_MTM,
-                               configFiles["kinematic-master"], 3.0 * cmn_ms);
+                               configFiles["kinematic-master"], 3.0 * cmn_ms, usingSimulink);
     console->AddArm(mtm);
 
     mtsIntuitiveResearchKitConsole::Arm * psm
             = new mtsIntuitiveResearchKitConsole::Arm(slaveName, io->GetName());
     psm->ConfigurePID(configFiles["pid-slave"]);
+    if(usingSimulink) {
+           psm->ConfigureSimulinkController(8);
+    }
     psm->ConfigureArm(mtsIntuitiveResearchKitConsole::Arm::ARM_PSM,
-                               configFiles["kinematic-slave"], 3.0 * cmn_ms);
+                               configFiles["kinematic-slave"], 3.0 * cmn_ms, usingSimulink);
     console->AddArm(psm);
+
 
     // connect ioGUIMaster to io
     mtsRobotIO1394QtWidgetFactory * robotWidgetFactory = new mtsRobotIO1394QtWidgetFactory("robotWidgetFactory");
@@ -161,13 +170,13 @@ int main(int argc, char ** argv)
     robotWidgetFactory->Configure();
 
     // PID Master GUI
-    mtsPIDQtWidget * pidMasterGUI = new mtsPIDQtWidget("PID Master", 8);
+    mtsPIDQtWidget * pidMasterGUI = new mtsPIDQtWidget("PID Master", 8, 50.0 * cmn_ms, usingSimulink);
     pidMasterGUI->Configure();
     componentManager->AddComponent(pidMasterGUI);
     componentManager->Connect(pidMasterGUI->GetName(), "Controller", mtm->PIDComponentName(), "Controller");
 
     // PID Slave GUI
-    mtsPIDQtWidget * pidSlaveGUI = new mtsPIDQtWidget("PID Slave", 7);
+    mtsPIDQtWidget * pidSlaveGUI = new mtsPIDQtWidget("PID Slave", 7, 50.0 * cmn_ms, usingSimulink);
     pidSlaveGUI->Configure();
     componentManager->AddComponent(pidSlaveGUI);
     componentManager->Connect(pidSlaveGUI->GetName(), "Controller", psm->PIDComponentName(), "Controller");
@@ -183,6 +192,25 @@ int main(int argc, char ** argv)
     slaveGUI->Configure();
     componentManager->AddComponent(slaveGUI);
     componentManager->Connect(slaveGUI->GetName(), "Manipulator", psm->Name(), "Robot");
+
+
+    //Simulink GUI
+          mtsSimulinkControllerQtWidget * simulinkArmGUI;
+        if(usingSimulink) {
+                 simulinkArmGUI = new mtsSimulinkControllerQtWidget("Simulink Arm", 7, 50.0 * cmn_ms, 12345, 54321); //you specify your     port numbers here!
+                 simulinkArmGUI->Configure();
+                 componentManager->AddComponent(simulinkArmGUI);
+
+                 //connections for mtm
+                 componentManager->Connect(simulinkArmGUI->GetName(),              "PIDController",                  psm->PIDComponentName(),                "Controller");   //just to read joint type
+                 componentManager->Connect(simulinkArmGUI->GetName(),              "RobotArmSimGUI",                 psm->Name(),                           "Robot");        //just to read desired cartesian position
+
+                 componentManager->Connect(simulinkArmGUI->GetName(),              "SimulinkControllerPIDGUI",       psm->SimulinkControllerComponentName(), "SimulinkController");
+                 componentManager->Connect(psm->SimulinkControllerComponentName(), "SignalSimulinkSocketsDone",      simulinkArmGUI->GetName(),              "SignalSimulinkDoneHighLevel");
+                 componentManager->Connect(simulinkArmGUI->GetName(),              "PidQtInterfaceSimulinkCommand",  pidSlaveGUI->GetName(),                      "SimulinkQtInterfaceSimulinkCommand");
+                 componentManager->Connect(pidSlaveGUI->GetName(),                      "SimulinkQtInterfacePIDCommand",  simulinkArmGUI->GetName(),              "PidQtInterfacePIDCommand");
+          }
+
 
     // Teleoperation
     mtsTeleOperationQtWidget * teleGUI = new mtsTeleOperationQtWidget("teleGUI");
