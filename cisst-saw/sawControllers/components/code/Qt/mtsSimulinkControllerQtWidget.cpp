@@ -35,7 +35,7 @@ http://www.cisst.org/cisst/license.txt.
 #include <QCoreApplication>
 
 //to check robot state
-#include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitArmTypes.h>
+#include <sawControllers/mtsIntuitiveResearchKitArmTypes.h>
 
 // cisst
 #include <cisstMultiTask/mtsInterfaceRequired.h>

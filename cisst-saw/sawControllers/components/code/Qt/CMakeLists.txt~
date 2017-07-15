@@ -37,8 +37,7 @@ if (cisst_FOUND_AS_REQUIRED)
     qt4_wrap_cpp (SAW_CONTROLLERS_QT_WRAP_CPP
                   ${sawControllers_HEADER_DIR}/mtsPIDQtWidget.h
                   ${sawControllers_HEADER_DIR}/mtsTeleOperationQtWidget.h
-                  ${sawControllers_HEADER_DIR}/mtsSimulinkControllerQtWidget.h
-                  ${sawControllers_HEADER_DIR}/mtsIntuitiveResearchKitArmTypes.h)
+                  ${sawControllers_HEADER_DIR}/mtsSimulinkControllerQtWidget.h)
   else (CISST_HAS_QT4)
     set (CMAKE_AUTOMOC ON)
   endif (CISST_HAS_QT4)
@@ -47,7 +46,6 @@ if (cisst_FOUND_AS_REQUIRED)
                ${sawControllers_HEADER_DIR}/mtsPIDQtWidget.h
                ${sawControllers_HEADER_DIR}/mtsTeleOperationQtWidget.h
                ${sawControllers_HEADER_DIR}/mtsSimulinkControllerQtWidget.h
-               ${sawControllers_HEADER_DIR}/mtsIntuitiveResearchKitArmTypes.h
                mtsPIDQtWidget.cpp
                mtsTeleOperationQtWidget.cpp
                mtsSimulinkControllerQtWidget.cpp
