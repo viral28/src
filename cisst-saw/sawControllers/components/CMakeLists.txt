@@ -70,8 +70,7 @@ if (cisst_FOUND)
        ${sawControllers_HEADER_DIR}/mtsPDGC.h
        ${sawControllers_HEADER_DIR}/mtsPID.h
        ${sawControllers_HEADER_DIR}/mtsTeleOperation.h
-       ${sawControllers_HEADER_DIR}/mtsSimulinkController.h
-       ${sawControllers_HEADER_DIR}/mtsIntuitiveResearchKitArmTypes.h)
+       ${sawControllers_HEADER_DIR}/mtsSimulinkController.h)
 
   set (SOURCE_FILES
        code/osaGravityCompensation.cpp
