@@ -86,8 +86,8 @@ void mtsIntuitiveResearchKitConsole::Arm::ConfigureSimulinkController(const unsi
      mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();       
      mtsSimulinkController * simulinkControllerMaster = new mtsSimulinkController(mSimulinkControllerComponentName,
                                      (periodInSeconds != 0.0) ? periodInSeconds : 1.0 * cmn_ms, numJoints );
-    // simulinkControllerMaster->Configure(mPIDConfigurationFile);                
-     //componentManager->AddComponent(simulinkControllerMaster);                  
+     simulinkControllerMaster->Configure(mPIDConfigurationFile);                
+     componentManager->AddComponent(simulinkControllerMaster);                  
      componentManager->Connect(SimulinkControllerComponentName(), "RobotJointTorqueInterface", IOComponentName(), Name());
                                                                                 
      if (periodInSeconds == 0.0) {                                              
