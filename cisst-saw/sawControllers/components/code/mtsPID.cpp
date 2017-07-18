@@ -17,7 +17,6 @@ http://www.cisst.org/cisst/license.txt.
 */
 
 #include <cisstCommon/cmnXMLPath.h>
-#include <cisstOSAbstraction/osaSleep.h>
 #include <cisstMultiTask/mtsInterfaceRequired.h>
 #include <cisstMultiTask/mtsInterfaceProvided.h>
 #include <cisstOSAbstraction/osaSleep.h>
@@ -515,7 +514,8 @@ void mtsPID::Run(void)
         TorqueParam.SetForceTorque(Torque);
         if(EnabledIO) {
             Robot.SetTorque(TorqueParam);
-         //CMN_LOG_RUN_WARNING << "RunPID: " << GetName() << std::setprecision(5) << Torque << std::endl;
+         //CMN_LOG_RUN_WARNING << "RunPID: " << GetName() << 
+            std::setprecision(5) << Torque << std::endl;
          }     
         if (!mIsSimulated) {
             Robot.SetTorque(TorqueParam);

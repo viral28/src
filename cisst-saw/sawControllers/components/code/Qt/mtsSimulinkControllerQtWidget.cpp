@@ -39,7 +39,6 @@ http://www.cisst.org/cisst/license.txt.
 
 // cisst
 #include <cisstMultiTask/mtsInterfaceRequired.h>
-#include <cisstMultiTask/mtsInterfaceProvided.h>
 #include <cisstParameterTypes/prmJointType.h>
 #include <cisstCommon/cmnConstants.h>
 #include <cisstCommon/cmnUnits.h>
