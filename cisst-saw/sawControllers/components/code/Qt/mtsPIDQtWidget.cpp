@@ -99,6 +99,23 @@ void mtsPIDQtWidget::Init(void)
         interfaceRequired->AddEventHandlerWrite(&mtsPIDQtWidget::ErrorEventHandler, this, "Error");
         interfaceRequired->AddEventHandlerWrite(&mtsPIDQtWidget::EnableEventHandler, this, "Enabled");
     }
+        if(usingSimulink) {
+        mtsInterfaceRequired * simulinkQtInterfaceRequired = AddInterfaceRequired("SimulinkQtInterfacePIDCommand");
+        if (simulinkQtInterfaceRequired) {
+            simulinkQtInterfaceRequired->AddFunction("EnableSimulinkWidgetFromPID", SimulinkQtWidget.EnableWidget);
+            simulinkQtInterfaceRequired->AddFunction("EnableSimulinkFromPID",       SimulinkQtWidget.Enable);
+            simulinkQtInterfaceRequired->AddFunction("EnableSimulinkLogsFromPID",   SimulinkQtWidget.EnableLogs);
+            //the below means COMMENCED, as in, is Simulink in control?
+            simulinkQtInterfaceRequired->AddFunction("IsSimulinkEnabled",           SimulinkQtWidget.IsEnabled);
+        }
+
+        mtsInterfaceProvided * simulinkQtInterfaceProvided = AddInterfaceProvided("SimulinkQtInterfaceSimulinkCommand");
+        if (simulinkQtInterfaceProvided) {
+            simulinkQtInterfaceProvided->AddCommandWrite(&mtsPIDQtWidget::EnablePIDFromSimulinkQt , this,  "EnablePIDFromSimulink",     mtsBool());
+            //simulinkQtInterfaceProvided->AddCommandWrite(&mtsPIDQtWidget::EnableLogsFromSimulinkQt , this,  "EnablePIDLogsFromSimulink", mtsBool());
+            }
+    }
+
     setupUi();
     startTimer(TimerPeriodInMilliseconds); // ms
 }

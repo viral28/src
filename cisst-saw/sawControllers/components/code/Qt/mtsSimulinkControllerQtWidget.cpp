@@ -247,9 +247,9 @@ void mtsSimulinkControllerQtWidget::SlotEnableSimulink(bool toggle)
             //do sanity check that in cartesian mode
             std::string state;
             RobotArm.GetRobotControlState(state);
-            if(mtsIntuitiveResearchKitArmTypes::RobotStateTypeFromString(state) != mtsIntuitiveResearchKitArmTypes::DVRK_POSITION_CARTESIAN){
-                CMN_LOG_RUN_WARNING << "WARNING!! Robot not in Cartesian mode! About to run Cartesian controller!" << std::endl;
-            }
+            //if(mtsIntuitiveResearchKitArmTypes::RobotStateTypeFromString(state) != mtsIntuitiveResearchKitArmTypes::DVRK_POSITION_CARTESIAN){
+            //    CMN_LOG_RUN_WARNING << "WARNING!! Robot not in Cartesian mode! About to run Cartesian controller!" << std::endl;
+            //}
 
             RobotArm.GetPositionCartesian(RobotArm.PositionCartesianCurrent);
             prmPositionCartesianSet positionCartCur;
