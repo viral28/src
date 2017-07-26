@@ -31,7 +31,10 @@ http://www.cisst.org/cisst/license.txt.
 #include <sawIntuitiveResearchKit/mtsTeleOperationECMQtWidget.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitSUJQtWidget.h>
 
+ #include <sawControllers/mtsSimulinkControllerQtWidget.h>
+
 #include <QTabWidget>
+
 
 CMN_IMPLEMENT_SERVICES(mtsIntuitiveResearchKitConsoleQt);
 
@@ -40,7 +43,7 @@ mtsIntuitiveResearchKitConsoleQt::mtsIntuitiveResearchKitConsoleQt(void)
 }
 
 void mtsIntuitiveResearchKitConsoleQt::Configure(mtsIntuitiveResearchKitConsole * console)
-{
+{   bool usingSimulink = false;
     mtsComponentManager * componentManager = mtsComponentManager::GetInstance();
 
     mtsIntuitiveResearchKitConsoleQtWidget * consoleGUI = new mtsIntuitiveResearchKitConsoleQtWidget("consoleGUI");
@@ -108,19 +111,26 @@ void mtsIntuitiveResearchKitConsoleQt::Configure(mtsIntuitiveResearchKitConsole 
         case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_DERIVED:
             // PID widget
             unsigned int numberOfJoints;
+            
             if ((armIter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_PSM) ||
                 (armIter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_DERIVED)) {
                 numberOfJoints = 7;
+                usingSimulink = true;
+                armIter->second->ConfigureSimulinkController(7);
             } else if ((armIter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_MTM) ||
                        (armIter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_DERIVED)) {
                 numberOfJoints = 8;
+                //usingSimulink = true;
+                //armIter->second->ConfigureSimulinkController(8);
             } else if ((armIter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_ECM) ||
                        (armIter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_DERIVED)) {
                 numberOfJoints = 4;
+                usingSimulink = false;
             } else {
                 numberOfJoints = 0; // can't happen but prevents compiler warning
+                usingSimulink = false;
             }
-            pidGUI = new mtsPIDQtWidget(name + "-PID-GUI", numberOfJoints);
+            pidGUI = new mtsPIDQtWidget(name + "-PID-GUI", numberOfJoints, 50.0 * cmn_ms, usingSimulink);
             pidGUI->Configure();
             componentManager->AddComponent(pidGUI);
             Connections.push_back(new ConnectionType(pidGUI->GetName(), "Controller", armIter->second->PIDComponentName(), "Controller"));
@@ -132,6 +142,24 @@ void mtsIntuitiveResearchKitConsoleQt::Configure(mtsIntuitiveResearchKitConsole 
             componentManager->AddComponent(armGUI);
             Connections.push_back(new ConnectionType(armGUI->GetName(), "Manipulator", armIter->second->mName, "Robot"));
             armTabWidget->addTab(armGUI, name.c_str());
+            
+            mtsSimulinkControllerQtWidget * simulinkArmGUI;
+            if(usingSimulink) {
+                simulinkArmGUI = new mtsSimulinkControllerQtWidget("Simulink Arm", 7, 50.0 * cmn_ms, 12345, 54321); //you specify your     port numbers here!
+                simulinkArmGUI->Configure();
+            
+                componentManager->AddComponent(simulinkArmGUI);    
+                TabWidget->addTab(simulinkArmGUI, "simulink Arm"); 
+                //connections for mtm
+                componentManager->Connect(simulinkArmGUI->GetName(),              "PIDController",                  armIter->second->PIDComponentName(),                "Controller");   //just to read joint type 
+                componentManager->Connect(simulinkArmGUI->GetName(),              "RobotArmSimGUI",                 armIter->second->Name(),                           "Robot");        //just to read desired cartesian position
+     
+                componentManager->Connect(simulinkArmGUI->GetName(),              "SimulinkControllerPIDGUI",       armIter->second->SimulinkControllerComponentName(), "SimulinkController");
+                componentManager->Connect(armIter->second->SimulinkControllerComponentName(), "SignalSimulinkSocketsDone",      simulinkArmGUI->GetName(),              "SignalSimulinkDoneHighLevel");
+                componentManager->Connect(simulinkArmGUI->GetName(),              "PidQtInterfaceSimulinkCommand",  pidGUI->GetName(),                      "SimulinkQtInterfaceSimulinkCommand");
+                componentManager->Connect(pidGUI->GetName(),                      "SimulinkQtInterfacePIDCommand",  simulinkArmGUI->GetName(),              "PidQtInterfacePIDCommand");
+            }
+
             break;
 
         case mtsIntuitiveResearchKitConsole::Arm::ARM_SUJ:
@@ -190,6 +218,12 @@ void mtsIntuitiveResearchKitConsoleQt::Configure(mtsIntuitiveResearchKitConsole 
         Connections.push_back(new ConnectionType(teleopGUI->GetName(), "TeleOperation", name, "Setting"));
         TabWidget->addTab(teleopGUI, name.c_str());
     }
+
+     
+
+
+
+
 
     consoleGUI->HasTeleOp(hasTeleOp);
 
