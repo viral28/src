@@ -195,22 +195,21 @@ int main(int argc, char ** argv)
 
 
     //Simulink GUI
-          mtsSimulinkControllerQtWidget * simulinkArmGUI;
-        if(usingSimulink) {
+    mtsSimulinkControllerQtWidget * simulinkArmGUI;
+    if(usingSimulink) {
                  simulinkArmGUI = new mtsSimulinkControllerQtWidget("Simulink Arm", 7, 50.0 * cmn_ms, 12345, 54321); //you specify your     port numbers here!
                  simulinkArmGUI->Configure();
                  componentManager->AddComponent(simulinkArmGUI);
 
                  //connections for mtm
-                 componentManager->Connect(simulinkArmGUI->GetName(),              "PIDController",                  psm->PIDComponentName(),                "Controller");   //just to read joint type
-                 componentManager->Connect(simulinkArmGUI->GetName(),              "RobotArmSimGUI",                 psm->Name(),                           "Robot");        //just to read desired cartesian position
+                 componentManager->Connect(simulinkArmGUI->GetName(),              "PIDController",                  mtm->PIDComponentName(),                "Controller");   //just to read joint type
+                 componentManager->Connect(simulinkArmGUI->GetName(),              "RobotArmSimGUI",                 mtm->Name(),                           "Robot");        //just to read desired cartesian position
 
-                 componentManager->Connect(simulinkArmGUI->GetName(),              "SimulinkControllerPIDGUI",       psm->SimulinkControllerComponentName(), "SimulinkController");
-                 componentManager->Connect(psm->SimulinkControllerComponentName(), "SignalSimulinkSocketsDone",      simulinkArmGUI->GetName(),              "SignalSimulinkDoneHighLevel");
+                 componentManager->Connect(simulinkArmGUI->GetName(),              "SimulinkControllerPIDGUI",       mtm->SimulinkControllerComponentName(), "SimulinkController");
+                 componentManager->Connect(mtm->SimulinkControllerComponentName(), "SignalSimulinkSocketsDone",      simulinkArmGUI->GetName(),              "SignalSimulinkDoneHighLevel");
                  componentManager->Connect(simulinkArmGUI->GetName(),              "PidQtInterfaceSimulinkCommand",  pidSlaveGUI->GetName(),                      "SimulinkQtInterfaceSimulinkCommand");
                  componentManager->Connect(pidSlaveGUI->GetName(),                      "SimulinkQtInterfacePIDCommand",  simulinkArmGUI->GetName(),              "PidQtInterfacePIDCommand");
-          }
-
+    }
 
     // Teleoperation
     mtsTeleOperationQtWidget * teleGUI = new mtsTeleOperationQtWidget("teleGUI");
@@ -254,7 +253,12 @@ int main(int argc, char ** argv)
         tabWidget->addTab(*iterator, (*iterator)->GetName().c_str());
     }
     tabWidget->addTab(robotWidgetFactory->ButtonsWidget(), "Buttons");
+    if(usingSimulink) {
+        tabWidget->addTab(simulinkArmGUI,  "Simulink Arm");
+ 	}
     tabWidget->show();
+
+
 
     //-------------- create the components ------------------
     io->CreateAndWait(2.0 * cmn_s); // this will also create the pids as they are in same thread

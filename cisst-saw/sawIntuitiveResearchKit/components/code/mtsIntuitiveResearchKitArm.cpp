@@ -1017,6 +1017,8 @@ void mtsIntuitiveResearchKitArm::GetJointTorqueFromForceTorque(vctDoubleVec &tor
 
     for (unsigned int i=0; i < cartesianJointTorque.size(); i++)
         torqueValues.at(i) = cartesianJointTorque.at(i);
+
+    //torqueValues.at(NumberOfJoints - 1) = 0.0; //assume grip force is zero
 }
 
 
