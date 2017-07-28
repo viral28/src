@@ -43,7 +43,7 @@ mtsIntuitiveResearchKitConsoleQt::mtsIntuitiveResearchKitConsoleQt(void)
 }
 
 void mtsIntuitiveResearchKitConsoleQt::Configure(mtsIntuitiveResearchKitConsole * console)
-{   //bool usingSimulink = false;
+{   bool usingSimulink = false;
     mtsComponentManager * componentManager = mtsComponentManager::GetInstance();
 
     mtsIntuitiveResearchKitConsoleQtWidget * consoleGUI = new mtsIntuitiveResearchKitConsoleQtWidget("consoleGUI");
@@ -112,25 +112,30 @@ void mtsIntuitiveResearchKitConsoleQt::Configure(mtsIntuitiveResearchKitConsole 
             // PID widget
             unsigned int numberOfJoints;
             
-            if ((armIter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_PSM) ||
-                (armIter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_DERIVED)) {
-                numberOfJoints = 7;
-                //usingSimulink = true;
-                armIter->second->ConfigureSimulinkController(7);
-            } else if ((armIter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_MTM) ||
-                       (armIter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_DERIVED)) {
-                numberOfJoints = 8;
-                //usingSimulink = false;
-                //armIter->second->ConfigureSimulinkController(8);
-            } else if ((armIter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_ECM) ||
-                       (armIter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_DERIVED)) {
-                numberOfJoints = 4;
-               // usingSimulink = false;
-            } else {
-                numberOfJoints = 0; // can't happen but prevents compiler warning
-               // usingSimulink = false;
+            if (armIter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_PSM){
+            	numberOfJoints = 7;
+                usingSimulink = true;
+                //armIter->second->ConfigureSimulinkController(7);
+                pidGUI = new mtsPIDQtWidget(name + "-PID-GUI", numberOfJoints , 50.0 * cmn_ms, usingSimulink);
+            } else{
+	            if(armIter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_DERIVED) {
+	            	numberOfJoints = 7;
+	                usingSimulink = false;
+	            } else if ((armIter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_MTM) ||
+	                       (armIter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_DERIVED)) {
+	                numberOfJoints = 8;
+	                usingSimulink = false;
+	                //armIter->second->ConfigureSimulinkController(8);
+	            } else if ((armIter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_ECM) ||
+	                       (armIter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_DERIVED)) {
+	                numberOfJoints = 4;
+	                usingSimulink = false;
+	            } else {
+	                numberOfJoints = 0; // can't happen but prevents compiler warning
+	                usingSimulink = false;
+	            }
+            	pidGUI = new mtsPIDQtWidget(name + "-PID-GUI", numberOfJoints /*, 50.0 * cmn_ms, usingSimulink*/);
             }
-            pidGUI = new mtsPIDQtWidget(name + "-PID-GUI", numberOfJoints /*, 50.0 * cmn_ms, usingSimulink*/);
             pidGUI->Configure();
             componentManager->AddComponent(pidGUI);
             Connections.push_back(new ConnectionType(pidGUI->GetName(), "Controller", armIter->second->PIDComponentName(), "Controller"));
