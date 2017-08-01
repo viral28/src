@@ -145,18 +145,18 @@ int main(int argc, char ** argv)
     mtsIntuitiveResearchKitConsole::Arm * mtm
             = new mtsIntuitiveResearchKitConsole::Arm(masterName, io->GetName());
     mtm->ConfigurePID(configFiles["pid-master"]);
-    if(usingSimulink) {
-           mtm->ConfigureSimulinkController(7);
-    }
+    //if(usingSimulink) {
+    //       mtm->ConfigureSimulinkController(7);
+    //}
     mtm->ConfigureArm(mtsIntuitiveResearchKitConsole::Arm::ARM_MTM,
-                               configFiles["kinematic-master"], 3.0 * cmn_ms, usingSimulink);
+                               configFiles["kinematic-master"], 3.0 * cmn_ms);
     console->AddArm(mtm);
 
     mtsIntuitiveResearchKitConsole::Arm * psm
             = new mtsIntuitiveResearchKitConsole::Arm(slaveName, io->GetName());
     psm->ConfigurePID(configFiles["pid-slave"]);
     if(usingSimulink) {
-           psm->ConfigureSimulinkController(8);
+           psm->ConfigureSimulinkController(7);
     }
     psm->ConfigureArm(mtsIntuitiveResearchKitConsole::Arm::ARM_PSM,
                                configFiles["kinematic-slave"], 3.0 * cmn_ms, usingSimulink);
@@ -201,12 +201,12 @@ int main(int argc, char ** argv)
                  simulinkArmGUI->Configure();
                  componentManager->AddComponent(simulinkArmGUI);
 
-                 //connections for mtm
-                 componentManager->Connect(simulinkArmGUI->GetName(),              "PIDController",                  mtm->PIDComponentName(),                "Controller");   //just to read joint type
-                 componentManager->Connect(simulinkArmGUI->GetName(),              "RobotArmSimGUI",                 mtm->Name(),                           "Robot");        //just to read desired cartesian position
+                 //connections for psm
+                 componentManager->Connect(simulinkArmGUI->GetName(),              "PIDController",                  psm->PIDComponentName(),                "Controller");   //just to read joint type
+                 componentManager->Connect(simulinkArmGUI->GetName(),              "RobotArmSimGUI",                 psm->Name(),                           "Robot");        //just to read desired cartesian position
 
-                 componentManager->Connect(simulinkArmGUI->GetName(),              "SimulinkControllerPIDGUI",       mtm->SimulinkControllerComponentName(), "SimulinkController");
-                 componentManager->Connect(mtm->SimulinkControllerComponentName(), "SignalSimulinkSocketsDone",      simulinkArmGUI->GetName(),              "SignalSimulinkDoneHighLevel");
+                 componentManager->Connect(simulinkArmGUI->GetName(),              "SimulinkControllerPIDGUI",       psm->SimulinkControllerComponentName(), "SimulinkController");
+                 componentManager->Connect(psm->SimulinkControllerComponentName(), "SignalSimulinkSocketsDone",      simulinkArmGUI->GetName(),              "SignalSimulinkDoneHighLevel");
                  componentManager->Connect(simulinkArmGUI->GetName(),              "PidQtInterfaceSimulinkCommand",  pidSlaveGUI->GetName(),                      "SimulinkQtInterfaceSimulinkCommand");
                  componentManager->Connect(pidSlaveGUI->GetName(),                      "SimulinkQtInterfacePIDCommand",  simulinkArmGUI->GetName(),              "PidQtInterfacePIDCommand");
     }

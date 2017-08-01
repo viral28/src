@@ -191,7 +191,7 @@ void mtsSimulinkControllerQtWidget::Init()
     mtsInterfaceRequired * pidQtInterfaceRequired = AddInterfaceRequired("PidQtInterfaceSimulinkCommand");
     if (pidQtInterfaceRequired) {
         pidQtInterfaceRequired->AddFunction("EnablePIDFromSimulink",      PIDQtWidget.Enable);
-        pidQtInterfaceRequired->AddFunction("EnablePIDLogsFromSimulink",  PIDQtWidget.EnableLogs);
+        //pidQtInterfaceRequired->AddFunction("EnablePIDLogsFromSimulink",  PIDQtWidget.EnableLogs);
 
 
     }
