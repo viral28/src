@@ -619,10 +619,15 @@ void mtsIntuitiveResearchKitConsole::Configure(const std::string & filename)
         const std::string pidConfig = iter->second->mPIDConfigurationFile;
         if (pidConfig != "") {
             iter->second->ConfigurePID(pidConfig);
+           //  if (iter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_PSM)
+              //iter->second->ConfigureSimulinkController(7);
         }
         const std::string armConfig = iter->second->mArmConfigurationFile;
         if (armConfig != "") {
-            iter->second->ConfigureArm(iter->second->mType, armConfig, iter->second->mArmPeriod);
+          if (iter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_PSM)
+            iter->second->ConfigureArm(iter->second->mType, armConfig, iter->second->mArmPeriod/*, true*/);
+          else
+            iter->second->ConfigureArm(iter->second->mType, armConfig, iter->second->mArmPeriod/*, false*/);
         }
     }
 
