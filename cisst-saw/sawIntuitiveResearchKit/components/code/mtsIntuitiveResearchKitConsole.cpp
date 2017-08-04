@@ -112,7 +112,7 @@ void mtsIntuitiveResearchKitConsole::Arm::ConfigureSimulinkController(const unsi
     case ARM_MTM:
         {
             if (!existingArm) {
-                mtsIntuitiveResearchKitMTM * master = new mtsIntuitiveResearchKitMTM(Name(), periodInSeconds, UsingSimulink());
+                mtsIntuitiveResearchKitMTM * master = new mtsIntuitiveResearchKitMTM(Name(), periodInSeconds, false);
                 if (mSimulation == SIMULATION_KINEMATIC) {
                     master->SetSimulated();
                 }
@@ -303,7 +303,7 @@ bool mtsIntuitiveResearchKitConsole::Arm::Connect(void)
         if ((mBaseFrameComponentName != "") && (mBaseFrameInterfaceName != "")) {
             componentManager->Connect(Name(), "BaseFrame", mBaseFrameComponentName, mBaseFrameInterfaceName);
         }
-        if(UsingSimulink()) {
+        if(false) {
              componentManager->Connect(Name(), "SimulinkControlCommand",
                                    SimulinkControllerComponentName(), "SimulinkController");
              componentManager->Connect(SimulinkControllerComponentName(), "RobotPSM",
@@ -625,9 +625,9 @@ void mtsIntuitiveResearchKitConsole::Configure(const std::string & filename)
         const std::string armConfig = iter->second->mArmConfigurationFile;
         if (armConfig != "") {
           if (iter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_PSM)
-            iter->second->ConfigureArm(iter->second->mType, armConfig, iter->second->mArmPeriod/*, true*/);
+            iter->second->ConfigureArm(iter->second->mType, armConfig, iter->second->mArmPeriod, true);
           else
-            iter->second->ConfigureArm(iter->second->mType, armConfig, iter->second->mArmPeriod/*, false*/);
+            iter->second->ConfigureArm(iter->second->mType, armConfig, iter->second->mArmPeriod, false);
         }
     }
 
