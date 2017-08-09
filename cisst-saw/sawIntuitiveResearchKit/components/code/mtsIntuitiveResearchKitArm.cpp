@@ -33,7 +33,7 @@ CMN_IMPLEMENT_SERVICES_DERIVED_ONEARG(mtsIntuitiveResearchKitArm, mtsTaskPeriodi
 mtsIntuitiveResearchKitArm::mtsIntuitiveResearchKitArm(const std::string & componentName, const double periodInSeconds, const bool usingSimulinkControl):
     mtsTaskPeriodic(componentName, periodInSeconds)
 {
-    usingSimulink = false;
+    usingSimulink = usingSimulinkControl;
 }
 
 mtsIntuitiveResearchKitArm::mtsIntuitiveResearchKitArm(const mtsTaskPeriodicConstructorArg & arg):
@@ -184,8 +184,7 @@ void mtsIntuitiveResearchKitArm::Init(void)
     if (RobotInterface) {
         // Get
         RobotInterface->AddCommandReadState(this->StateTable, JointGetParam, "GetPositionJoint");
-        RobotInterface->AddCommandRead(&mtsIntuitiveResearchKitArm::GetRobotCartVelFromJacobian, this, "GetRobotCartVelFromJacobian");
-        RobotInterface->AddCommandRead(&mtsIntuitiveResearchKitArm::GetJointTorqueFromForceTorque,this, "GetJointTorqueFromForceTorque");
+        
         RobotInterface->AddCommandReadState(this->StateTable, JointGetDesired, "GetPositionJointDesired");
         RobotInterface->AddCommandReadState(this->StateTable, StateJointParam, "GetStateJoint");
         RobotInterface->AddCommandReadState(this->StateTable, StateJointDesiredParam, "GetStateJointDesired");
@@ -199,6 +198,8 @@ void mtsIntuitiveResearchKitArm::Init(void)
         RobotInterface->AddCommandReadState(this->StateTable, JacobianBody, "GetJacobianBody");
         RobotInterface->AddCommandReadState(this->StateTable, JacobianSpatial, "GetJacobianSpatial");
         // Set
+        RobotInterface->AddCommandRead(&mtsIntuitiveResearchKitArm::GetRobotCartVelFromJacobian, this, "GetRobotCartVelFromJacobian");
+        RobotInterface->AddCommandRead(&mtsIntuitiveResearchKitArm::GetJointTorqueFromForceTorque,this, "GetJointTorqueFromForceTorque");
         RobotInterface->AddCommandVoid(&mtsIntuitiveResearchKitArm::Freeze,
                                        this, "Freeze");
         RobotInterface->AddCommandWrite(&mtsIntuitiveResearchKitArm::SetBaseFrame,

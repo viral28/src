@@ -740,3 +740,8 @@ double mtsSimulinkController::GetElapsedTime(timespec time0, timespec time1)
     return (time1.tv_sec  - time0.tv_sec) * 1000.0 +
            (time1.tv_nsec - time0.tv_nsec) / 1.0e6;
 }
+void mtsSimulinkController::SetSimulated(void){
+    mIsSimulated = true;
+    // in simulation mode, we don't need IO
+    RemoveInterfaceRequired("RobotJointTorqueInterface");
+}

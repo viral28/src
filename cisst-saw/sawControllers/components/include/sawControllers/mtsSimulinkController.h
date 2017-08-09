@@ -66,6 +66,8 @@ public:
     void Startup(void);
     void Run(void);
     void Cleanup(void);
+    /******************for the simulator******************/
+    void SetSimulated(void);
 
 protected:
     void SetupInterfaces(void);
@@ -92,6 +94,11 @@ protected:
         mtsFunctionRead GetJointTorqueFromForceTorques;
         mtsFunctionRead GetPositionCartesian;
     } RobotArm;
+
+
+    // Flag to determine if this is connected to actual IO/hardware or
+    // simulated
+    bool mIsSimulated;
 
     /******************Control Members******************/
     //! Counter for internal use
@@ -205,6 +212,8 @@ protected:
     void UpdateStateData();
     vctDoubleVec GetCartesianPosRot(vctFrm4x4 position);
     double GetElapsedTime(struct timespec time0, struct timespec time1);
+
+
 
 };
 

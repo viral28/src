@@ -112,7 +112,7 @@ void mtsPIDQtWidget::Init(void)
         mtsInterfaceProvided * simulinkQtInterfaceProvided = AddInterfaceProvided("SimulinkQtInterfaceSimulinkCommand");
         if (simulinkQtInterfaceProvided) {
             simulinkQtInterfaceProvided->AddCommandWrite(&mtsPIDQtWidget::EnablePIDFromSimulinkQt , this,  "EnablePIDFromSimulink",     mtsBool());
-            //simulinkQtInterfaceProvided->AddCommandWrite(&mtsPIDQtWidget::EnableLogsFromSimulinkQt , this,  "EnablePIDLogsFromSimulink", mtsBool());
+            simulinkQtInterfaceProvided->AddCommandWrite(&mtsPIDQtWidget::EnableLogsFromSimulinkQt , this,  "EnablePIDLogsFromSimulink", mtsBool());
             }
     }
 

@@ -122,7 +122,7 @@ private:
     bool DirectControl;
  bool isSimulinkEnabled();                                                  
      void EnablePIDFromSimulinkQt(const mtsBool & enable); 
-     //void EnableLogsFromSimulinkQt(const mtsBool &enable);                    
+     void EnableLogsFromSimulinkQt(const mtsBool &enable);                    
                                                                                  
      void EnablePID(bool localButtonUsed, bool enable);                         
                                                                                  

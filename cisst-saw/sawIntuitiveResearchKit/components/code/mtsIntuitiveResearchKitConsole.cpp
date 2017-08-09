@@ -86,13 +86,21 @@ void mtsIntuitiveResearchKitConsole::Arm::ConfigureSimulinkController(const unsi
      mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();       
      mtsSimulinkController * simulinkControllerMaster = new mtsSimulinkController(mSimulinkControllerComponentName,
                                      (periodInSeconds != 0.0) ? periodInSeconds : 1.0 * cmn_ms, numJoints );
-     simulinkControllerMaster->Configure(mPIDConfigurationFile);                
-     componentManager->AddComponent(simulinkControllerMaster);                  
-     componentManager->Connect(SimulinkControllerComponentName(), "RobotJointTorqueInterface", IOComponentName(), Name());
-                                                                                
-     if (periodInSeconds == 0.0) {                                              
-         componentManager->Connect(SimulinkControllerComponentName(), "ExecIn", 
-                                   IOComponentName(), "ExecOut");               
+     bool hasIO = true;
+     simulinkControllerMaster->Configure(mPIDConfigurationFile);       
+     if (mSimulation == SIMULATION_KINEMATIC) {
+      simulinkControllerMaster->SetSimulated();
+        hasIO = false;
+     }
+
+     componentManager->AddComponent(simulinkControllerMaster);
+     if (hasIO) {                 
+       componentManager->Connect(SimulinkControllerComponentName(), "RobotJointTorqueInterface", IOComponentName(), Name());
+                                                                                  
+       if (periodInSeconds == 0.0) {                                              
+           componentManager->Connect(SimulinkControllerComponentName(), "ExecIn", 
+                                     IOComponentName(), "ExecOut");               
+       }
      }                                                                          
  } 
 
@@ -303,7 +311,7 @@ bool mtsIntuitiveResearchKitConsole::Arm::Connect(void)
         if ((mBaseFrameComponentName != "") && (mBaseFrameInterfaceName != "")) {
             componentManager->Connect(Name(), "BaseFrame", mBaseFrameComponentName, mBaseFrameInterfaceName);
         }
-        if(false) {
+        if(UsingSimulink()) {
              componentManager->Connect(Name(), "SimulinkControlCommand",
                                    SimulinkControllerComponentName(), "SimulinkController");
              componentManager->Connect(SimulinkControllerComponentName(), "RobotPSM",
@@ -619,13 +627,15 @@ void mtsIntuitiveResearchKitConsole::Configure(const std::string & filename)
         const std::string pidConfig = iter->second->mPIDConfigurationFile;
         if (pidConfig != "") {
             iter->second->ConfigurePID(pidConfig);
-           //  if (iter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_PSM)
-              //iter->second->ConfigureSimulinkController(7);
+             if (iter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_PSM)
+             iter->second->ConfigureSimulinkController(7);
         }
         const std::string armConfig = iter->second->mArmConfigurationFile;
         if (armConfig != "") {
-          if (iter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_PSM)
+          if (iter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_PSM){
             iter->second->ConfigureArm(iter->second->mType, armConfig, iter->second->mArmPeriod, true);
+             
+          }
           else
             iter->second->ConfigureArm(iter->second->mType, armConfig, iter->second->mArmPeriod, false);
         }
