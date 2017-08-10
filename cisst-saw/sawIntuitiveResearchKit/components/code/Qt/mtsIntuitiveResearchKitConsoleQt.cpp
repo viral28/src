@@ -151,13 +151,13 @@ void mtsIntuitiveResearchKitConsoleQt::Configure(mtsIntuitiveResearchKitConsole 
 		                 componentManager->AddComponent(simulinkArmGUI);
 
 		                 //connections for mtm
-		                 componentManager->Connect(simulinkArmGUI->GetName(),              "PIDController",                  armIter->second->PIDComponentName(),                "Controller");   //just to read joint type
-		                 componentManager->Connect(simulinkArmGUI->GetName(),              "RobotArmSimGUI",                 armIter->second->Name(),                           "Robot");        //just to read desired cartesian position
+		                 componentManager->Connect(simulinkArmGUI->GetName(),                          "PIDController",                  armIter->second->PIDComponentName(),                "Controller");   //just to read joint type
+		                 componentManager->Connect(simulinkArmGUI->GetName(),                          "RobotArmSimGUI",                 armIter->second->Name(),                            "Robot");        //just to read desired cartesian position
 
-		                 componentManager->Connect(simulinkArmGUI->GetName(),              "SimulinkControllerPIDGUI",       armIter->second->SimulinkControllerComponentName(), "SimulinkController");
-		                 componentManager->Connect(armIter->second->SimulinkControllerComponentName(), "SignalSimulinkSocketsDone",      simulinkArmGUI->GetName(),              "SignalSimulinkDoneHighLevel");
-		                 componentManager->Connect(simulinkArmGUI->GetName(),              "PidQtInterfaceSimulinkCommand",  armGUI->GetName(),                      "SimulinkQtInterfaceSimulinkCommand");
-		                 componentManager->Connect(armGUI->GetName(),                      "SimulinkQtInterfacePIDCommand",  simulinkArmGUI->GetName(),              "PidQtInterfacePIDCommand");
+		                 componentManager->Connect(simulinkArmGUI->GetName(),                          "SimulinkControllerPIDGUI",       armIter->second->SimulinkControllerComponentName(), "SimulinkController");
+		                 componentManager->Connect(armIter->second->SimulinkControllerComponentName(), "SignalSimulinkSocketsDone",      simulinkArmGUI->GetName(),                          "SignalSimulinkDoneHighLevel");
+		                 componentManager->Connect(simulinkArmGUI->GetName(),                          "PidQtInterfaceSimulinkCommand",  pidGUI->GetName(),                                  "SimulinkQtInterfaceSimulinkCommand");
+		                 componentManager->Connect(pidGUI->GetName(),                                  "SimulinkQtInterfacePIDCommand",  simulinkArmGUI->GetName(),                          "PidQtInterfacePIDCommand");
 		           		
 		           	}
 		           	 armTabWidget->addTab(simulinkArmGUI,  "Simulink Arm");
