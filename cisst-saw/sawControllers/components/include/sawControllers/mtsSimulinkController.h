@@ -66,7 +66,7 @@ public:
     void Startup(void);
     void Run(void);
     void Cleanup(void);
-
+    void SetSimulated(void);
 protected:
     void SetupInterfaces(void);
     void Enable(const bool & enable);
@@ -94,6 +94,10 @@ protected:
     } RobotArm;
 
     /******************Control Members******************/
+    // Flag to determine if this is connected to actual IO/hardware or
+    // simulated
+    
+    bool mIsSimulated;
     //! Counter for internal use
     int  Counter;
 

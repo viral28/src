@@ -141,7 +141,7 @@ void mtsIntuitiveResearchKitConsoleQt::Configure(mtsIntuitiveResearchKitConsole 
             componentManager->AddComponent(armGUI);
             Connections.push_back(new ConnectionType(armGUI->GetName(), "Manipulator", armIter->second->mName, "Robot"));
             armTabWidget->addTab(armGUI, name.c_str());
-            /*if (armIter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_PSM){
+            if (armIter->second->mType == mtsIntuitiveResearchKitConsole::Arm::ARM_PSM){
             	 //Simulink GUI
 		          	mtsSimulinkControllerQtWidget * simulinkArmGUI;
 		          	
@@ -161,7 +161,7 @@ void mtsIntuitiveResearchKitConsoleQt::Configure(mtsIntuitiveResearchKitConsole 
 		           		
 		           	}
 		           	 armTabWidget->addTab(simulinkArmGUI,  "Simulink Arm");
-            }*/
+            }
 
             
             break;

@@ -1,4 +1,4 @@
-/* ex: set filetype=cpp softtabstop=4 shiftwidth=4 tabstop=4 cindent expandtab: */
+ /* ex: set filetype=cpp softtabstop=4 shiftwidth=4 tabstop=4 cindent expandtab: */
 
 /*
   Author(s):  Angelica Ruszkowski
@@ -33,7 +33,8 @@ mtsSimulinkController::mtsSimulinkController(const std::string &componentName, d
     mtsTaskPeriodic(componentName, periodInSeconds),
     Counter(0),
     Enabled(false),
-    usingJointController(true)
+    usingJointController(true),
+    mIsSimulated(false)
 {
     NumberOfJoints = NumJoints;
     taskName = componentName;
@@ -44,7 +45,8 @@ mtsSimulinkController::mtsSimulinkController(const mtsTaskPeriodicConstructorArg
     mtsTaskPeriodic(arg),
     Counter(0),
     Enabled(false),
-    usingJointController(true)
+    usingJointController(true),
+    mIsSimulated(false)
 { }
 
 void mtsSimulinkController::Configure(const std::string & filename)
@@ -116,7 +118,9 @@ void mtsSimulinkController::Run(void)
         if(!disablePIDNextReceivedPacket) { //just not for first wait
             //write torque to robot
             TorqueParam.SetForceTorque(Torque);
-            Robot.SetTorque(TorqueParam);
+           if (!mIsSimulated) {
+                Robot.SetTorque(TorqueParam);
+            }
         }
 
         if(simulinkIsReady) { //successfully received something
