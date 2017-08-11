@@ -466,7 +466,7 @@ void mtsSimulinkControllerQtWidget::setupUi(void)
     LEhostIP->setInputMask("000.000.000.000");
     //LEhostIP->setInputMask("000.000.000.000;_");
     LEhostIP->setCursorPosition(0);
-    LEhostIP->setText("137.82.56.245");
+    LEhostIP->setText("137.82.56.221");
 
     QLabel * kinematicPortLabel = new QLabel(tr("Kinematic port:"));
     LEkinematicPort = new QLineEdit;

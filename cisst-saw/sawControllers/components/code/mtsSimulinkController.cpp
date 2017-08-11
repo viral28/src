@@ -661,12 +661,22 @@ void mtsSimulinkController::LogEntry(bool all)
 void mtsSimulinkController::UpdateStateData()
 {
     // update position, insertion is in mm, all others in radians!!!
+    if (!mIsSimulated){
     mtsExecutionResult executionResult = Robot.GetFeedbackPosition(FeedbackPositionParam);
-    if (!executionResult.IsOK()) {
-        CMN_LOG_CLASS_RUN_WARNING << "UpdateStateData: Call to mtsSimulinkController::Robot.GetFeedbackPosition failed \""
-                                  << executionResult << "\"" << std::endl;
-    }
+    
+        if (!executionResult.IsOK()) {
+            CMN_LOG_CLASS_RUN_WARNING << "UpdateStateData: Call to mtsSimulinkController::Robot.GetFeedbackPosition failed \""
+                                      << executionResult << "\"" << std::endl;
+        }
     FeedbackPositionParam.GetPosition(FeedbackPosition);
+    }
+        
+    else{
+        FeedbackPositionParam.SetValid(true);
+        //FeedbackPositionParam.SetPosition(FeedbackPositionPreviousParam.Position());
+        FeedbackPositionParam.GetPosition(FeedbackPosition);
+    }
+    
 
     double dt = -1;
     // update velocities
