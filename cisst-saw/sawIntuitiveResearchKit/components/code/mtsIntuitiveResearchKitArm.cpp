@@ -33,7 +33,7 @@ CMN_IMPLEMENT_SERVICES_DERIVED_ONEARG(mtsIntuitiveResearchKitArm, mtsTaskPeriodi
 mtsIntuitiveResearchKitArm::mtsIntuitiveResearchKitArm(const std::string & componentName, const double periodInSeconds, const bool usingSimulinkControl):
     mtsTaskPeriodic(componentName, periodInSeconds)
 {
-    usingSimulink = false;
+    usingSimulink = usingSimulinkControl;
 }
 
 mtsIntuitiveResearchKitArm::mtsIntuitiveResearchKitArm(const mtsTaskPeriodicConstructorArg & arg):
@@ -739,7 +739,7 @@ void mtsIntuitiveResearchKitArm::SetPositionJointLocal(const vctDoubleVec & newP
     if(usingSimulink) {
         SimulinkController.GetControllerTypeIsJoint(SimulinkController.UsingJointControl);
         if(SimulinkController.UsingJointControl) {
-            SimulinkController.SetDesiredJointPosition(JointSetParam);
+            SimulinkController.SetDesiredCartesianPosition(JointSetParam);
         } else { //using Cartesian Control
             SimulinkController.SetDesiredCartesianPosition(CartesianSetParam);
         }

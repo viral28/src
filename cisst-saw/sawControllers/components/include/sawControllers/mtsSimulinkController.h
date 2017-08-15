@@ -95,9 +95,7 @@ protected:
 
     /******************Control Members******************/
     // Flag to determine if this is connected to actual IO/hardware or
-    // simulated
-    
-    bool mIsSimulated;
+  
     //! Counter for internal use
     int  Counter;
 
@@ -115,6 +113,10 @@ protected:
 
     //! Flag to track type of controller used
     bool usingJointController; //versus Cartesian
+
+    // Is it simulated
+    
+    bool mIsSimulated;
 
     //! Feedback joint positions
     vctDoubleVec FeedbackPosition;

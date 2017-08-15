@@ -312,8 +312,8 @@ bool mtsIntuitiveResearchKitConsole::Arm::Connect(void)
             componentManager->Connect(Name(), "BaseFrame", mBaseFrameComponentName, mBaseFrameInterfaceName);
         }
         if(mUsingSimulink && mType == ARM_PSM) {
-            // componentManager->Connect(Name(), "SimulinkControlCommand",
-            //                       SimulinkControllerComponentName(), "SimulinkController");
+             componentManager->Connect(Name(), "SimulinkControlCommand",
+                                   SimulinkControllerComponentName(), "SimulinkController");
              componentManager->Connect(SimulinkControllerComponentName(), "RobotPSM",
                                   Name(), "Robot");
 

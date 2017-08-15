@@ -358,10 +358,10 @@ void mtsSimulinkController::SendDataToSimulink()
         }
 
         if(usingJointController) {
-            dataPacket->SetPositionData(FeedbackPosition, DesiredPosition);
-            dataPacket->SetVelocityData(FeedbackVelocity);
+            dataPacket->SetPositionData(FeedbackPosition, FeedbackPosition);
+           dataPacket->SetVelocityData(FeedbackVelocity);
         } else {
-            dataPacket->SetPositionData(CartesianCurrentPos, CartesianDesiredPos);
+             dataPacket->SetPositionData(CartesianCurrentPos, CartesianDesiredPos);
             dataPacket->SetVelocityData(CartesianVelocity);
         }
 
@@ -668,16 +668,13 @@ void mtsSimulinkController::UpdateStateData()
             CMN_LOG_CLASS_RUN_WARNING << "UpdateStateData: Call to mtsSimulinkController::Robot.GetFeedbackPosition failed \""
                                       << executionResult << "\"" << std::endl;
         }
-    FeedbackPositionParam.GetPosition(FeedbackPosition);
-    }
-        
     else{
         FeedbackPositionParam.SetValid(true);
-        //FeedbackPositionParam.SetPosition(FeedbackPositionPreviousParam.Position());
-        FeedbackPositionParam.GetPosition(FeedbackPosition);
+        FeedbackPositionParam.SetPosition(FeedbackPositionPreviousParam.Position());
+        //FeedbackPositionParam.GetPosition(FeedbackPosition);
     }
-    
-
+    FeedbackPositionParam.GetPosition(FeedbackPosition);
+}
     double dt = -1;
     // update velocities
     if (Robot.GetFeedbackVelocity.IsValid()) {
