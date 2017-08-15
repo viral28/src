@@ -739,7 +739,7 @@ void mtsIntuitiveResearchKitArm::SetPositionJointLocal(const vctDoubleVec & newP
     if(usingSimulink) {
         SimulinkController.GetControllerTypeIsJoint(SimulinkController.UsingJointControl);
         if(SimulinkController.UsingJointControl) {
-            SimulinkController.SetDesiredCartesianPosition(JointSetParam);
+            SimulinkController.SetDesiredJointPosition(JointSetParam);
         } else { //using Cartesian Control
             SimulinkController.SetDesiredCartesianPosition(CartesianSetParam);
         }
